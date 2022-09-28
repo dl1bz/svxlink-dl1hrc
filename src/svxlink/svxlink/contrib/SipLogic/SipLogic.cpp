@@ -89,7 +89,7 @@ using namespace pj;
  *
  ****************************************************************************/
 #define DEFAULT_SIPLIMITER_THRESH  -1.0
-#define PJSIP_VERSION "17082022"
+#define PJSIP_VERSION "20092022"
 
 
 /****************************************************************************
@@ -1085,7 +1085,11 @@ pj_status_t SipLogic::mediaPortGetFrame(pjmedia_port *port, pjmedia_frame *frame
   float* smpl = new float[count+1]();
   pj_int16_t *samples = static_cast<pj_int16_t *>(frame->buf);
   frame->type = PJMEDIA_FRAME_TYPE_AUDIO;
-
+  if(!smpl)
+  {
+    cout << "+++WARNING: Race condition pointer is null" << endl;
+    return PJ_SUCCESS;
+  }
   if ((got = m_ar->readSamples(smpl, count)) > 0)
   {
     int i = 0;

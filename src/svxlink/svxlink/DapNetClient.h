@@ -136,12 +136,12 @@ class DapNetClient : public Async::TcpClient<>
      */
     ~DapNetClient(void);
 
-    
+
     /**
      * @brief 
      */
     bool initialize(void);
-   
+
     /**
      * @brief A signal that is emitted when a message has been received
      * @param msg The received message
@@ -159,10 +159,10 @@ class DapNetClient : public Async::TcpClient<>
      *
      */
     bool sendDapMessage(std::string call, std::string message);
-    
+
   protected:
 
-    
+
   private:
 
     Async::Config             &cfg;

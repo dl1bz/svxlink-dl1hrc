@@ -304,6 +304,14 @@ class Squelch : public sigc::trackable, public Async::AudioSink
      */
     sigc::signal<void, bool> squelchOpen;
 
+    /**
+     *
+     */
+    virtual void setSql(bool is_open)
+    {
+      std::cout << "sqtSql-----" << (is_open ? "TRUE" : "FALSE") << "\n";
+    };
+
   protected:
     /**
      * @brief 	Process the incoming samples in the squelch detector
@@ -338,6 +346,7 @@ class Squelch : public sigc::trackable, public Async::AudioSink
      */
     inline void setSignalDetected(bool is_detected, const std::string& info="")
     {
+      std::cout << "setSignalDetected" << (is_detected ? "TRUE" : "FALSE") << "\n";
       if (m_signal_detected != is_detected)
       {
         m_signal_detected_info = info;

@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <iostream>
 #include <regex.h>
 #include <fstream>
+#include <algorithm>
 
 
 /****************************************************************************
@@ -131,7 +132,7 @@ using namespace SvxLink;
 
 #define MAX_TRIES 5
 
-#define TETRA_LOGIC_VERSION "19052022"
+#define TETRA_LOGIC_VERSION "20092022"
 
 /****************************************************************************
  *
@@ -226,15 +227,13 @@ TetraLogic::TetraLogic(void)
 
 bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name)
 {
-  bool isok = false;
+  bool isok = true;
   if (!Logic::initialize(cfgobj, logic_name))
   {
     isok = false;
   }
 
-  static SquelchSpecificFactory<SquelchTetra> tetra_modem_factory;
-
-   // get own position
+    // get own position
   if (LocationInfo::has_instance())
   {
     own_lat = getDecimalDegree(LocationInfo::instance()->getCoordinate(true));
@@ -317,10 +316,10 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
     if (value.length() != 2)
     {
       isok = false;
-      cout << "*** ERROR: " << name() << "/DEFAULT_APRS_ICON "
-           << "must have 2 characters, e.g. '/e' or if the backslash or "
-           << "a comma is used it has to be encoded with an additional "
-           << "'\', e.g. " << "DEFAULT_APRS_ICON=\\r" << endl;
+      log(LOGERROR, "*** ERROR: " + name() + "/DEFAULT_APRS_ICON "
+          + "must have 2 characters, e.g. '/e' or if the backslash or "
+          + "a comma is used it has to be encoded with an additional "
+          + "'\', e.g. DEFAULT_APRS_ICON=\\r");
     }
     else 
     {
@@ -347,7 +346,6 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
   }
 
   list<string>::iterator slit;
-
   string user_section;
   if (cfg().getValue(name(), "TETRA_USERS", user_section))
   {
@@ -367,9 +365,8 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
       cfg().getValue(user_section, *slit, value);
       if ((*slit).length() != 17)
       {
-        cout << "*** ERROR: Wrong length of TSI in TETRA_USERS definition, "
-             << "should have 17 digits (MCC[4] MNC[5] ISSI[8]), e.g. "
-             << "09011638312345678" << endl;
+        log(LOGERROR, "*** ERROR: Wrong length of TSI in TETRA_USERS definition, \
+             should have 17 digits (MCC[4] MNC[5] ISSI[8]), e.g. 09011638312345678");
         isok = false;
       }
       else
@@ -380,9 +377,9 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
         std::string m_aprs = getNextStr(value);
         if (m_aprs.length() != 2)
         {
-          cout << "*** ERROR: Check Aprs icon definition for " << m_user.call
-               << " in section " << user_section 
-               << ". It must have exactly 2 characters, e.g.: 'e\'" << endl;
+          log(LOGERROR, "*** ERROR: Check Aprs icon definition for "
+               + m_user.call + " in section " + user_section
+               + ". It must have exactly 2 characters, e.g.: 'e\'");
           isok = false;
         }
         else
@@ -439,9 +436,9 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
       m_user.issi = t_userdata.get("tsi", "").asString();
       if (m_user.issi.length() != 17)
       {
-        cout << "*** ERROR: The TSI must have a length of 17 digits.\n"
-          << "\" Check dataset " << i + 1 << " in \"" << user_info_file
-          << "\"" << endl;
+        log(LOGERROR, "*** ERROR: The TSI must have a length of 17 digits.\n \
+          \" Check dataset " + std::to_string(i + 1) + " in \""
+          + user_info_file + "\"");
         isok = false;
       }
       m_user.name = t_userdata.get("name","").asString();
@@ -449,9 +446,9 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
       m_user.location = t_userdata.get("location","").asString();
       if (t_userdata.get("symbol","").asString().length() != 2)
       {
-        cout << "*** ERROR: Aprs symbol in \"" << user_info_file
-           << "\" dataset " << i + 1 << " is not correct, must have 2 digits!"
-           << endl;
+        log(LOGERROR, "*** ERROR: Aprs symbol in \"" + user_info_file
+           + "\" dataset " + to_string(i + 1)
+           + " is not correct, must have 2 digits!");
         isok = false;
       }
       else
@@ -481,9 +478,8 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
       cfg().getValue(sds_useractivity, *slit, value);
       if (value.length() > 100)
       {
-        cout << "+++ WARNING: Message to long (>100 digits) at " << name()
-             << "/" << sds_useractivity << ": " << (*slit) 
-             << ". Cutting message.";
+        log(LOGWARN, "+++ WARNING: Message to long (>100 digits) at " + name()
+          + "/" + sds_useractivity + ": " + (*slit) + ". Cutting message.");
         sds_on_activity[atoi((*slit).c_str())] = value.substr(0,100);
       }
       else
@@ -506,16 +502,13 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
       isds = static_cast<unsigned int>(std::stoul(*slit));
       if (isds < 32768 || isds > 65535)
       {
-        cout << "*** ERROR: Sds decimal value in section " << name()
-             << "/SDS_TO_COMMAND is not valid (" << isds 
-             << "), must be between 32768 and 65535" << endl;
+        log(LOGERROR, "*** ERROR: Sds decimal value in section " + name()
+          + "/SDS_TO_COMMAND is not valid (" + to_string(isds)
+          + "), must be between 32768 and 65535");
       }
       else
       {
-        if (debug >= LOGINFO)
-        {
-          cout << isds << "=" << value << endl;
-        }
+        log(LOGINFO, to_string(isds) + "=" + value);
         sds_to_command[isds] = value;
       }
     }
@@ -567,13 +560,13 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
       isds = static_cast<unsigned int>(std::stoul(*slit));
       if(isds < 32768 || isds > 65536)
       {
-        cout << "*** ERROR: Sds decimal value in section " << name()
-             << "/TETRA_STATUS is not valid (" << isds
-             << "), must be between 32768 and 65535" << endl;
+        log(LOGERROR, "*** ERROR: Sds decimal value in section "
+          + name() + "/TETRA_STATUS is not valid (" + to_string(isds)
+          + "), must be between 32768 and 65535");
       }
       else
       {
-        log(LOGINFO, isds + "=" + value);
+        log(LOGINFO, std::to_string(isds) + "=" + value);
         state_sds[isds] = value;
       }
     }
@@ -587,19 +580,6 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
   if (cfg().getValue(name(), "TIME_BETWEEN_SDS", value))
   {
     time_between_sds = atoi(value.c_str());  
-  }
-
-  // create the special Tetra-squelch
-  Squelch *squelch_det = createSquelch("TETRA_SQL");
-  tetra_modem_sql = dynamic_cast<SquelchTetra*>(squelch_det);
-  if (tetra_modem_sql != nullptr)
-  {
-    log(LOGINFO, "Creating tetra specific Sql ok");
-  }
-  else
-  {
-    cout << "*** ERROR creating Tetra specific squelch" << endl;
-    isok = false;
   }
 
   // init the Pei device
@@ -634,8 +614,7 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
 
   if (!pei->open(true))
   {
-    cerr << "*** ERROR: Opening serial port " << name() << "/PORT="
-         << port << endl;
+    log(LOGERROR, "*** ERROR: Opening serial port " + name() + "/PORT=" + port);
     isok = false;
   }
   pei->setParams(baudrate, Serial::PARITY_NONE, 8, 1, Serial::FLOW_NONE);
@@ -650,17 +629,15 @@ bool TetraLogic::initialize(Async::Config& cfgobj, const std::string& logic_name
 
   peirequest = AT_CMD_WAIT;
   initPei();
-
   rxValveSetOpen(true);
   setTxCtrlMode(Tx::TX_AUTO);
 
   processEvent("startup");
 
-  cout << ">>> Started SvxLink with special TetraLogic extension (v"
-       << TETRA_LOGIC_VERSION << ")" << endl;
-  cout << ">>> No guarantee! Please send a bug report to\n"
-       << ">>> Adi/DL1HRC <dl1hrc@gmx.de> or use the groups.io mailing list"
-       << endl;
+  log(LOGINFO, ">>> Started SvxLink with special TetraLogic extension (v"
+     TETRA_LOGIC_VERSION ")");
+  log(LOGINFO, ">>> No guarantee! Please send a bug report to\n" \
+      ">>> Adi/DL1HRC <dl1hrc@gmx.de> or use the groups.io mailing list");
 
   // Test/Debug entries for bug detection, normally comment out
   /*std::string sds = "0A0BA7D5B95BC50AFFE16";
@@ -752,17 +729,15 @@ void TetraLogic::squelchOpen(bool is_open)
   // should be allowed. Commenting out the statements below.
   std::string s = (is_open ? "true" : "false");
   log(LOGTRACE, "TetraLogic::squelchOpen: squelchopen=" + s);
-  
+
   if (tx().isTransmitting())
   {
     log(LOGTRACE, "TetraLogic::squelchOpen: tx().isTransmitting()=true");
     return;
   }
 
-  log(LOGTRACE, "TetraLogic::squelchOpen: tetra_modem_sql->setSql(" + s + ")");
-  tetra_modem_sql->setSql(is_open);
-  log(LOGTRACE, "TetraLogic::squelchOpen: rx().setSql(" + s + ")");
-  rx().setSql(is_open);
+  log(LOGTRACE, "TetraLogic::squelchOpen: rx().setSqlState=(" + s + ")");
+  rx().setSql(is_open, "TetraSql=" + s);
   log(LOGTRACE, "TetraLogic::squelchOpen: Logic::squelchOpen(" + s + ")");
   Logic::squelchOpen(is_open);
 } /* TetraLogic::squelchOpen */
@@ -1617,7 +1592,7 @@ void TetraLogic::handleCallReleased(std::string message)
   message.erase(0,7);
   int cci = getNextVal(message);
 
-  if (tetra_modem_sql->isOpen())
+  if (rx().squelchIsOpen())
   {
     ss << "out_of_range " << getNextVal(message);
     log(LOGTRACE, "TetraLogic::handleCallReleased: " + ss.str());
@@ -2115,7 +2090,7 @@ bool TetraLogic::checkSds(void)
   }
 
   // now check that the MTM is clean and not in tx state
-  if (peistate != OK || inTransmission || tetra_modem_sql->isOpen()) return true;
+  if (peistate != OK || inTransmission || rx().squelchIsOpen()) return true;
 
   if (cmgs_received)
   {

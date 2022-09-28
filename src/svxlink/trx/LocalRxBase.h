@@ -224,7 +224,7 @@ class LocalRxBase : public Rx
     sigc::signal<void, float, float> ctcssSnrUpdated;
     
 
-    virtual void setSql(bool is_open);
+    //virtual void setSql(bool is_open);
 
     
   protected:

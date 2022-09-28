@@ -786,10 +786,10 @@ void LocalRxBase::unregisterFullbandSink(Async::AudioSink* sink)
 } /* LocalRxBase::unregisterFullbandSink */
 
 
-void LocalRxBase::setSql(bool is_open)
-{
-  squelch_det->squelchOpen(is_open);
-} /* LocalRxBase::setSql */
+//void LocalRxBase::setSql(bool is_open)
+//{
+//  squelch_det->squelchOpen(is_open);
+//} /* LocalRxBase::setSql */
 
 
 

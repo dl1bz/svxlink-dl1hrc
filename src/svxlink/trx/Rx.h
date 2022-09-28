@@ -305,7 +305,10 @@ class Rx : public sigc::trackable, public Async::AudioSource
      * @brief 	Set the Sql state for this receiver
      * @param 	is_open The Sql state to set for this receiver
      */
-    virtual void setSql(bool is_open) {};
+    void setSql(bool is_open, std::string info)
+    {
+      setSquelchState(is_open, info);
+    };
 
   protected:
     /**

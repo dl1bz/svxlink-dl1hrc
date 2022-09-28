@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <vector>
 #include <list>
 #include <time.h>
+#include <algorithm>
 
 
 /****************************************************************************
@@ -57,7 +58,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  ****************************************************************************/
 
 #include "Logic.h"
-#include "Squelch.h"
 #include "DapNetClient.h"
 
 
@@ -112,39 +112,6 @@ namespace Async
  * Class definitions
  *
  ****************************************************************************/
-
-class SquelchTetra : public Squelch
-{
-  public:
-     /// The name of this class when used by the object factory 
-  static constexpr const char* OBJNAME = "TETRA_SQL";
-
-  SquelchTetra(void) {}
-
-  ~SquelchTetra(void) {}
-
-  void setSql(bool is_open)
-  {
-    setSignalDetected(is_open);
-  }
-
-  protected:
-    /**
-     * @brief 	Process the incoming samples in the squelch detector
-     * @param 	samples A buffer containing samples
-     * @param 	count The number of samples in the buffer
-     * @return	Return the number of processed samples
-     */
-    int processSamples(const float *samples, int count)
-    {
-      return count;
-    }
-
-  private:
-    SquelchTetra(const SquelchTetra&);
-    SquelchTetra& operator=(const SquelchTetra&);
-
-}; /* SquelchTetra */
 
 
 /**
@@ -280,7 +247,7 @@ class TetraLogic : public Logic
       time_t sent_last_sds = 0;
     };
     std::map<std::string, User> userdata;
-    
+
     struct DmoRpt {
       int issi;
       std::string mni;
@@ -288,7 +255,6 @@ class TetraLogic : public Logic
       time_t last_activity;
     };
     std::map<int, DmoRpt> dmo_rep_gw;
-    
     std::map<int, std::string> sds_on_activity;
     std::map<unsigned int, std::string> sds_to_command;
 
@@ -319,13 +285,13 @@ class TetraLogic : public Logic
     {
       OUTGOING, INCOMING
     } SdsDirection;
-    
+
      // type of Sds
     typedef enum
     {
       STATE, TEXT, LIP_SHORT, COMPLEX_SDS_TL, RAW
     } SdsType;
-    
+
      // Sds sent state
     typedef enum
     {
@@ -339,7 +305,7 @@ class TetraLogic : public Logic
     Async::Timer peiActivityTimer;
     Async::Timer peiBreakCommandTimer;
     Call*    call;
-    
+
     struct pSds {
       int sdstype;
       int aiservice;
@@ -348,7 +314,7 @@ class TetraLogic : public Logic
       time_t last_activity;
     };
     pSds pSDS;
-    
+
     std::map<unsigned int, std::string> state_sds;
     StrList m_cmds;
     int pending_sdsid;
@@ -356,7 +322,6 @@ class TetraLogic : public Logic
     char t_aprs_tab;
     float proximity_warning;
     int time_between_sds;
-    SquelchTetra* tetra_modem_sql;
     float own_lat;
     float own_lon;
     std::string endCmd;

@@ -76,7 +76,7 @@ using namespace SvxLink;
  ****************************************************************************/
 
 #define DAPNETSOFT "SvxLink-TetraGw"
-#define DAPNETVERSION "v19052022"
+#define DAPNETVERSION "v15092022"
 
 #define INVALID 0
 
@@ -393,7 +393,7 @@ void DapNetClient::onDapwebConnected(void)
 } /* DapNetClient::onDapwebConnected */
 
 
-// This method has copyed from:
+// This method was copyed from:
 // https://www.geeksforgeeks.org/encode-ascii-string-base-64-format/
 char* DapNetClient::encodeBase64(const char input_str[], int len_str)
 {
